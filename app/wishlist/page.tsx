@@ -5,6 +5,7 @@ import Spinner from '@/components/Spinner';
 import Link from 'next/link';
 import WishlistCard from '@/components/WishlistCard';
 import { useAppContext } from '@/app/providers';
+import { JSON_BIN_URL } from '@/constants';
 
 export default function WishlistPage() {
   const [wishlistCars, setWishlistCars] = useState<Car[]>([]);
@@ -12,11 +13,22 @@ export default function WishlistPage() {
 
   const { wishlist } = useAppContext();
 
+  // Use JSON Bin URL from constants
+
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
-        const res = await fetch('/api/cars');
-        const cars: Car[] = await res.json();
+        const res = await fetch(JSON_BIN_URL, {
+          headers: {
+            'X-Bin-Meta': 'false'
+          }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch cars');
+
+        const data = await res.json();
+        const cars = data.record || data;
+
         setWishlistCars(cars.filter(car => wishlist.includes(car.id)));
       } catch (err) {
         console.error(err);

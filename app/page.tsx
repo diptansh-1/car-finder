@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { Car, Filters } from '@/types';
 import { useAppContext } from './providers';
 import CarCard from '@/components/CarCard';
-import Filters from '@/components/Filters';
+import FiltersComponent from '@/components/Filters';
 import Spinner from '@/components/Spinner';
 import Pagination from '@/components/Pagination';
+import { JSON_BIN_URL } from '@/constants';
 
 export default function Home() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -34,16 +35,26 @@ export default function Home() {
     setSort('');
   };
 
+  // Use JSON Bin URL from constants
+
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const res = await fetch('/api/cars');
+        const res = await fetch(JSON_BIN_URL, {
+          headers: {
+            'X-Bin-Meta': 'false'
+          }
+        });
+
         if (!res.ok) throw new Error('Failed to fetch cars');
+
         const data = await res.json();
-        setCars(data);
-        setFilteredCars(data);
-      } catch (err) {
-        setError(err.message);
+        const cars = data.record || data;
+
+        setCars(cars);
+        setFilteredCars(cars);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch cars');
       } finally {
         setLoading(false);
       }
@@ -87,7 +98,7 @@ export default function Home() {
         </div>
       </div>
 
-      <Filters filters={filters} setFilters={setFilters} brands={[...new Set(cars.map(c => c.brand))]} />
+      <FiltersComponent filters={filters} setFilters={setFilters} brands={[...new Set(cars.map(c => c.brand))]} />
 
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="bg-white dark:bg-neutral-900 px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
